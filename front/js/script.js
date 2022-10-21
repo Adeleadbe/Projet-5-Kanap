@@ -1,13 +1,15 @@
-/**
- * Api call with fetch
- * @param { String } url
- * @param { String } method
- * @return { Promise }
- */
+//Appel à l'API
 fetch("http://localhost:3000/api/products")
-  .then((response) => response.json())
-  .then((jsonListKanap) => {
+  .then(function (response) {
+    if (response.ok) {
+      return response.json();
+    }
+  })
+  .then(function (jsonListKanap) {
     displayProducts(jsonListKanap);
+  })
+  .catch(function (err) {
+    console.log("erreur 404")
   });
 
 /**
@@ -22,17 +24,18 @@ function displayProducts(jsonListKanap) {
     // Création des balise qui vont contenir les fiches canapés
     const kanapElement = document.createElement("article");
 
+    //Element image
     const imageElement = document.createElement("img");
-    // On accède à l’indice i de la liste pieces pour configurer la source de l’image
     imageElement.src = jsonListKanap[i].imageUrl;
     imageElement.alt = jsonListKanap[i].altTxt;
-    // On rattache l’image à kanapElement (la balise article)
     kanapElement.appendChild(imageElement);
+
     //Element title
     const nameElement = document.createElement("h3");
     nameElement.innerText = jsonListKanap[i].name;
     nameElement.classList.add("productName");
     kanapElement.appendChild(nameElement);
+
     //Element description
     const descriptionElement = document.createElement("p");
     descriptionElement.innerText = jsonListKanap[i].description;
