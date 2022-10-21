@@ -87,7 +87,7 @@ function addCartProduct(jsonKanap) {
     function addCart(optionProduct) {
       //Recupere les produits du localStorage
       let productLocalStorage = getBasket();
-      let foundProduct = productLocalStorage.find(
+      const foundProduct = productLocalStorage.find(
         (product) =>
           product.id == optionProduct.id &&
           product.colors == optionProduct.colors
