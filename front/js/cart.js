@@ -1,17 +1,11 @@
-//Appel à l'API
-fetch(`http://localhost:3000/api/products/`)
-  .then((response) => response.json())
-  .then(() => {
-    deleteProduct();
-  });
-
+//Recupere les produits du LocalStorage
 let productLocalStorage = JSON.parse(localStorage.getItem("product"));
 
 //Crée des tableaux vides pour la quantité et le prix
 const quantityArr = [];
 const priceArr = [];
 
-//Ajout des éléments du Local Storage dans le DOM
+//Ajout les éléments du Local Storage dans le DOM
 for (let i = 0; i < productLocalStorage.length; i++) {
   const productCart = document.getElementById("cart__items");
   productCart.innerHTML += `<article class="cart__item" data-id="${productLocalStorage[i].id}" data-color="${productLocalStorage[i].colors}">
@@ -38,6 +32,7 @@ for (let i = 0; i < productLocalStorage.length; i++) {
 
   //Modifie les valeurs du prix et de la quantité
   const valueQuantity = parseInt(productLocalStorage[i].quantity);
+  //Multiplie le prix par la quantité du produit
   const valuePrice = parseInt(productLocalStorage[i].price) * productLocalStorage[i].quantity;
 
   //Push dans le tableau le prix et la quantité
@@ -47,11 +42,13 @@ for (let i = 0; i < productLocalStorage.length; i++) {
   //Prend l'id du prix et l'id de la quantité dans le DOM
   const price = document.getElementById("totalPrice");
   const quantity = document.getElementById("totalQuantity");
-  totalPrice = 0;
-  totalQuantity = 0;
+  //Crée une variable pour le prix total et la quantité total qui est à 0
+  let totalPrice = 0;
+  let totalQuantity = 0;
 
   //Boucle pour calculer le prix total
   for (let i = 0; i < priceArr.length; i++) {
+    //Additionne le prix total et le prix qui se trouve dans le tableau
     totalPrice += priceArr[i];
   }
   //Boucle pour calculer la quantité total
@@ -63,14 +60,13 @@ for (let i = 0; i < productLocalStorage.length; i++) {
   quantity.innerText = totalQuantity;
 }
 
-//Supprimer un élément du panier
+//Fonction pour supprimer un élément du panier
 function deleteProduct() {
   const buttons = document.querySelectorAll(".deleteItem");
-
-  for (let button of Array.from(buttons)) {
-    button.addEventListener("click", (e) => {
-      const kanapId = e.target.closest(".cart__item").dataset.id; //
-      const kanapColor = e.target.closest(".cart__item").dataset.color;
+  for (let button of buttons) {
+    button.addEventListener("click", () => {
+      const kanapId = button.closest(".cart__item").dataset.id; //
+      const kanapColor = button.closest(".cart__item").dataset.color;
       const foundProduct = productLocalStorage.find(
         (product) => product.id == kanapId && product.colors == kanapColor
       );
@@ -89,15 +85,15 @@ function changeQuantity() {
   const itemQuantity = document.querySelectorAll(".itemQuantity");
 
   for (let i = 0; i < itemQuantity.length; i++) {
-    itemQuantity[i].addEventListener("change", (e) => {
-      const kanapId = e.target.closest(".cart__item").dataset.id; //
-      const kanapColor = e.target.closest(".cart__item").dataset.color;
+    itemQuantity[i].addEventListener("change", () => {
+      const kanapId = itemQuantity[i].closest(".cart__item").dataset.id; //
+      const kanapColor = itemQuantity[i].closest(".cart__item").dataset.color;
 
       //Recupere les produits du localStorage
       const foundProduct = productLocalStorage.find(
         (product) => product.id == kanapId && product.colors == kanapColor
       );
-      //Modifie la quantité dans le productLocalStorage pour ajouter le changement de valeur de itemQuantity
+      //Modifie la quantité dans productLocalStorage pour ajouter le changement de valeur de itemQuantity
       foundProduct.quantity = itemQuantity[i].value;
       productLocalStorage.quantity = foundProduct.quantity;
       localStorage.setItem("product", JSON.stringify(productLocalStorage));
@@ -113,9 +109,7 @@ const form = document.querySelector(".cart__order__form");
 //Mise en place des RegExp
 const nameRegex = new RegExp("^[a-zA-Zàâäéèêëïîôöùûüç ,.'-]+$");
 const addressRegex = new RegExp("^[a-zA-Z0-9àâäéèêëïîôöùûüçs,' -]*$");
-const emailRegex = new RegExp(
-  "^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$"
-);
+const emailRegex = new RegExp("^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$");
 
 //Ecoute de l'evenement "change" sur les inputs
 form.firstName.addEventListener("change", function () {
@@ -139,8 +133,7 @@ form.email.addEventListener("change", function () {
 });
 
 //Création de fonction pour chacun des éléments
-const validFirstName = function (inputFirstName) {
-  //Test du regExp
+function validFirstName(inputFirstName) {
   const testFirstName = nameRegex.test(inputFirstName.value);
   const errorMsgFirstName = inputFirstName.nextElementSibling;
 
@@ -154,7 +147,7 @@ const validFirstName = function (inputFirstName) {
   }
 };
 
-const validLastName = function (inputLastName) {
+function validLastName(inputLastName) {
   const testLastName = nameRegex.test(inputLastName.value);
   const errorMsgLastName = inputLastName.nextElementSibling;
 
@@ -167,7 +160,7 @@ const validLastName = function (inputLastName) {
   }
 };
 
-const validAddress = function (inputAddress) {
+function validAddress(inputAddress) {
   const testAddress = addressRegex.test(inputAddress.value);
   const errorMsgAddress = inputAddress.nextElementSibling;
 
@@ -180,7 +173,7 @@ const validAddress = function (inputAddress) {
   }
 };
 
-const validCity = function (inputCity) {
+function validCity(inputCity) {
   const testCity = nameRegex.test(inputCity.value);
   const errorMsgCity = inputCity.nextElementSibling;
 
@@ -193,7 +186,7 @@ const validCity = function (inputCity) {
   }
 };
 
-const validEmail = function (inputEmail) {
+function validEmail(inputEmail) {
   const testEmail = emailRegex.test(inputEmail.value);
   const errorMsgEmail = inputEmail.nextElementSibling;
 

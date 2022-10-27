@@ -1,4 +1,4 @@
-//Récupérer l'id des produits
+//Récupére l'id des produits
 let params = new URLSearchParams(document.location.search);
 let id = params.get("id");
 
@@ -11,24 +11,30 @@ fetch(`http://localhost:3000/api/products/${id}`)
   })
   .then(function (jsonKanap) {
     displayKanap(jsonKanap);
-    addCartProduct(jsonKanap);
+    cartProduct(jsonKanap);
   })
   .catch(function (err) {
-    console.log("erreur 404");
+    console.log("erreur 404" + err);
   });
-// Récupére le choix de couleur du dom
+
+// Récupére le choix de couleur du DOM
 const colorsId = document.getElementById("colors");
+// Récupére le choix de quantité du DOM
 const productQuantity = document.getElementById("quantity");
 
+//Fonction qui affiche les éléments sur la page produit
 function displayKanap(jsonKanap) {
-  //Prendre les class et les id dans le DOM
+
+  //Prendre les class et les id dans le DOM correspondant
   const imgClass = document.querySelector(".item__img");
   const titleId = document.getElementById("title");
   const priceId = document.getElementById("price");
   const descriptionId = document.getElementById("description");
-  //Creation des elements pas dans le DOM
+
+  //Creation des elements qui ne sont pas dans le DOM
   const imageElement = document.createElement("img");
 
+  //Affiche les elements qui se trouve dans l'API 
   imageElement.src = jsonKanap.imageUrl;
   imageElement.alt = jsonKanap.altTxt;
   titleId.innerText = jsonKanap.name;
@@ -46,61 +52,63 @@ function displayKanap(jsonKanap) {
   }
 }
 
-//PRODUCT
-function addCartProduct(jsonKanap) {
+//Fonction pour gérer le clic d'ajout au panier
+function cartProduct(jsonKanap) {
   const button = document.getElementById("addToCart");
+
+  //Ecoute l'evenement click sur le bouton
   button.addEventListener("click", (event) => {
     event.preventDefault();
 
-    //Création de l'objet optionProduct
-    const optionProduct = {
+    //Création de l'objet productKanap
+    const productKanap = {
       id: jsonKanap._id,
       colors: colorsId.value,
       quantity: parseInt(productQuantity.value),
-      img: `${jsonKanap.imageUrl}`,
-      alt: `${jsonKanap.altTxt}`,
-      name: `${jsonKanap.name}`,
-      price: `${jsonKanap.price}`,
+      img: jsonKanap.imageUrl,
+      alt: jsonKanap.altTxt,
+      name: jsonKanap.name,
+      price: jsonKanap.price,
     };
 
-    if (optionProduct.colors == false) {
+    if (productKanap.colors == false) {
       alert("Veuillez sélectionner une couleur");
     } else if (productQuantity.value == 0) {
       alert("Veuillez sélectionner la quantité");
     } else {
       alert("Article bien ajouté au panier");
-      addCart(optionProduct);
+      addCart(productKanap);
     }
+  })
 
-    //Fonction qui récupére les produits du Local Storage, si pas de produits dans le LS alors retourne un tableau vide, si produits dans le LS, parse ces produits pour retourner l'objet
+    //Fonction qui récupére les produits du Local Storage
     function getBasket() {
       let productLocalStorage = localStorage.getItem("product");
+      //Si pas de produit dans le LS
       if (productLocalStorage == null) {
-        //Retourne un tableau vide (qui represente un panier vide)
+        //Retourne un tableau vide
         return [];
       } else {
-        //Retransforme la chaîne de caractere en un tableau ou un objet
+        //Retransforme la chaîne de caractere en un tableau
         return JSON.parse(productLocalStorage);
       }
     }
 
-    function addCart(optionProduct) {
+    //Fonction pour ajouter les produits dans le panier
+    function addCart(productKanap) {
       //Recupere les produits du localStorage
       let productLocalStorage = getBasket();
       const foundProduct = productLocalStorage.find(
-        (product) =>
-          product.id == optionProduct.id &&
-          product.colors == optionProduct.colors
+        (product) => product.id == productKanap.id && product.colors == productKanap.colors
       );
-
-      //Si il y a déjà des produits dans le localStorage, push à la fin du tableau un nouveau produit
+      //Si il y a déjà des produits dans le panier, les additionne
       if (foundProduct != undefined) {
-        foundProduct.quantity += optionProduct.quantity;
-        //Si il n'y a pas encore de produits dans le lS crée un new tableau dans lequel push le produit et l'ajoute au lS apres l'avoir stringify
+        foundProduct.quantity += productKanap.quantity;
       } else {
-        productLocalStorage.push(optionProduct);
+        //Si il n'y a pas encore de produits dans le lS push le produit
+        productLocalStorage.push(productKanap);
       }
       localStorage.setItem("product", JSON.stringify(productLocalStorage));
     }
-  });
-}
+  }
+
