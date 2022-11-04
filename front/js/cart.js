@@ -1,27 +1,44 @@
 //Recupere les produits du LocalStorage
 let productLocalStorage = JSON.parse(localStorage.getItem("product"));
 
-//Crée des tableaux vides pour la quantité et le prix
-const quantityArr = [];
-const priceArr = [];
+fetch("http://localhost:3000/api/products")
+  .then(function (response) {
+    if (response.ok) {
+      return response.json();
+    }
+  })
+  .then(function (jsonListKanap) {
+    dataApi(jsonListKanap);
+  })
+  .catch(function (err) {
+    console.log("erreur 404" + err);
+  });
 
-//Ajout les éléments du Local Storage dans le DOM
-for (let i = 0; i < productLocalStorage.length; i++) {
-  const productCart = document.getElementById("cart__items");
-  productCart.innerHTML += `<article class="cart__item" data-id="${productLocalStorage[i].id}" data-color="${productLocalStorage[i].colors}">
+//Fonction pour afficher tous les elements dans le panier
+function dataApi(jsonListKanap) {
+  for (let products of productLocalStorage) {
+    for (let i = 0; i < jsonListKanap.length; i++) {
+      //Affiche le prix en fonction de l'id et le multiplie par la quantité
+      if (products.id === jsonListKanap[i]._id) {
+        products.price = jsonListKanap[i].price * products.quantity;
+      }
+    }
+    //Ajoute les éléments du Local Storage dans le DOM
+    const productCart = document.getElementById("cart__items");
+    productCart.innerHTML += `<article class="cart__item" data-id="${products.id}" data-color="${products.colors}">
                       <div class="cart__item__img">
-                        <img src="${productLocalStorage[i].img}" alt="${productLocalStorage[i].alt}">
+                        <img src="${products.img}" alt="${products.alt}">
                       </div>
                       <div class="cart__item__content">
                         <div class="cart__item__content__description">
-                          <h2>${productLocalStorage[i].name}</h2>
-                          <p>${productLocalStorage[i].colors}</p>
-                          <p>${productLocalStorage[i].price} €</p>
+                          <h2>${products.name}</h2>
+                          <p>${products.colors}</p>
+                          <p>${products.price} €</p>
                         </div>
                         <div class="cart__item__content__settings">
                           <div class="cart__item__content__settings__quantity">
                             <p>Qté : </p>
-                            <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${productLocalStorage[i].quantity}">
+                            <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${products.quantity}">
                           </div>
                           <div class="cart__item__content__settings__delete">
                             <p class="deleteItem">Supprimer</p>
@@ -30,34 +47,52 @@ for (let i = 0; i < productLocalStorage.length; i++) {
                       </div>
                     </article>`;
 
-  //Modifie les valeurs du prix et de la quantité
-  const valueQuantity = parseInt(productLocalStorage[i].quantity);
-  //Multiplie le prix par la quantité du produit
-  const valuePrice = parseInt(productLocalStorage[i].price) * productLocalStorage[i].quantity;
-
-  //Push dans le tableau le prix et la quantité
-  quantityArr.push(valueQuantity);
-  priceArr.push(valuePrice);
-
-  //Prend l'id du prix et l'id de la quantité dans le DOM
-  const price = document.getElementById("totalPrice");
-  const quantity = document.getElementById("totalQuantity");
-  //Crée une variable pour le prix total et la quantité total qui est à 0
-  let totalPrice = 0;
-  let totalQuantity = 0;
-
-  //Boucle pour calculer le prix total
-  for (let i = 0; i < priceArr.length; i++) {
-    //Additionne le prix total et le prix qui se trouve dans le tableau
-    totalPrice += priceArr[i];
+    //Appel des fonctions
+    displayPriceQtty(jsonListKanap);
+    deleteProduct();
+    changeQuantity();
   }
-  //Boucle pour calculer la quantité total
-  for (let i = 0; i < quantityArr.length; i++) {
-    totalQuantity += quantityArr[i];
+
+  //Fonction pour afficher le prix et la quantité total
+  function displayPriceQtty() {
+    //Crée des tableaux vides pour la quantité et le prix
+    const quantityArr = [];
+    const priceArr = [];
+
+    //Boucle pour les produits dans le localStorage
+    for (let products of productLocalStorage) {
+
+      //Modifie les valeurs du prix et de la quantité
+      const valueQuantity = parseInt(products.quantity);
+      //Multiplie le prix par la quantité du produit
+      const valuePrice = parseInt(products.price) * products.quantity;
+
+      //Push dans le tableau le prix et la quantité
+      quantityArr.push(valueQuantity);
+      priceArr.push(valuePrice);
+
+      //Prend l'id du prix et l'id de la quantité dans le DOM
+      const price = document.getElementById("totalPrice");
+      const quantity = document.getElementById("totalQuantity");
+
+      //Crée une variable pour le prix total et la quantité total qui est à 0
+      let totalPrice = 0;
+      let totalQuantity = 0;
+
+      //Boucle pour calculer le prix total
+      for (let i = 0; i < priceArr.length; i++) {
+        //Additionne le prix total et le prix qui se trouve dans le tableau
+        totalPrice += priceArr[i];
+      }
+      //Boucle pour calculer la quantité total
+      for (let i = 0; i < quantityArr.length; i++) {
+        totalQuantity += quantityArr[i];
+      }
+      //Ajout du prix total et de la quantité total dans le DOM
+      price.innerText = totalPrice;
+      quantity.innerText = totalQuantity;
+    }
   }
-  //Ajout du prix total et de la quantité total dans le DOM
-  price.innerText = totalPrice;
-  quantity.innerText = totalQuantity;
 }
 
 //Fonction pour supprimer un élément du panier
@@ -65,7 +100,7 @@ function deleteProduct() {
   const buttons = document.querySelectorAll(".deleteItem");
   for (let button of buttons) {
     button.addEventListener("click", () => {
-      const kanapId = button.closest(".cart__item").dataset.id; //
+      const kanapId = button.closest(".cart__item").dataset.id;
       const kanapColor = button.closest(".cart__item").dataset.color;
       const foundProduct = productLocalStorage.find(
         (product) => product.id == kanapId && product.colors == kanapColor
@@ -78,9 +113,8 @@ function deleteProduct() {
     });
   }
 }
-deleteProduct();
 
-//Modifier la quantité
+//Fonction pour modifier la quantité
 function changeQuantity() {
   const itemQuantity = document.querySelectorAll(".itemQuantity");
 
@@ -93,7 +127,7 @@ function changeQuantity() {
       const foundProduct = productLocalStorage.find(
         (product) => product.id == kanapId && product.colors == kanapColor
       );
-      //Modifie la quantité dans productLocalStorage pour ajouter le changement de valeur de itemQuantity
+      //Modifie la quantité dans productLocalStorage pour ajouter le changement de itemQuantity
       foundProduct.quantity = itemQuantity[i].value;
       productLocalStorage.quantity = foundProduct.quantity;
       localStorage.setItem("product", JSON.stringify(productLocalStorage));
@@ -101,7 +135,6 @@ function changeQuantity() {
     });
   }
 }
-changeQuantity();
 
 //Recupere le formulaire pour saisir ses coordonnees et confirmer la commande
 const form = document.querySelector(".cart__order__form");
@@ -109,7 +142,9 @@ const form = document.querySelector(".cart__order__form");
 //Mise en place des RegExp
 const nameRegex = new RegExp("^[a-zA-Zàâäéèêëïîôöùûüç ,.'-]+$");
 const addressRegex = new RegExp("^[a-zA-Z0-9àâäéèêëïîôöùûüçs,' -]*$");
-const emailRegex = new RegExp("^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$");
+const emailRegex = new RegExp(
+  "^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$"
+);
 
 //Ecoute de l'evenement "change" sur les inputs
 form.firstName.addEventListener("change", function () {
@@ -132,7 +167,7 @@ form.email.addEventListener("change", function () {
   validEmail(this);
 });
 
-//Création de fonction pour chacun des éléments
+//Fonction qui test les regex dans le formulaire
 function validFirstName(inputFirstName) {
   const testFirstName = nameRegex.test(inputFirstName.value);
   const errorMsgFirstName = inputFirstName.nextElementSibling;
@@ -145,8 +180,9 @@ function validFirstName(inputFirstName) {
     errorMsgFirstName.innerText = "";
     return true;
   }
-};
+}
 
+//Fonction qui test les regex dans le formulaire
 function validLastName(inputLastName) {
   const testLastName = nameRegex.test(inputLastName.value);
   const errorMsgLastName = inputLastName.nextElementSibling;
@@ -158,8 +194,9 @@ function validLastName(inputLastName) {
     errorMsgLastName.innerText = "";
     return true;
   }
-};
+}
 
+//Fonction qui test les regex dans le formulaire
 function validAddress(inputAddress) {
   const testAddress = addressRegex.test(inputAddress.value);
   const errorMsgAddress = inputAddress.nextElementSibling;
@@ -171,8 +208,9 @@ function validAddress(inputAddress) {
     errorMsgAddress.innerText = "";
     return true;
   }
-};
+}
 
+//Fonction qui test les regex dans le formulaire
 function validCity(inputCity) {
   const testCity = nameRegex.test(inputCity.value);
   const errorMsgCity = inputCity.nextElementSibling;
@@ -184,8 +222,9 @@ function validCity(inputCity) {
     errorMsgCity.innerText = "";
     return true;
   }
-};
+}
 
+//Fonction qui test les regex dans le formulaire
 function validEmail(inputEmail) {
   const testEmail = emailRegex.test(inputEmail.value);
   const errorMsgEmail = inputEmail.nextElementSibling;
@@ -197,13 +236,23 @@ function validEmail(inputEmail) {
     errorMsgEmail.innerText = "";
     return true;
   }
-};
+}
 
 const buttonOrder = document.querySelector("#order");
+//Ecoute du click sur le bouton order pour envoyer ou non le formulaire
 buttonOrder.addEventListener("click", (e) => {
   e.preventDefault();
 
   if (
+    validEmail(form.email) &&
+    validFirstName(form.firstName) &&
+    validLastName(form.lastName) &&
+    validCity(form.city) &&
+    validAddress(form.address) &&
+    productLocalStorage.length === 0 
+  ) {
+    alert("Votre panier est vide");
+  } else if (
     validEmail(form.email) &&
     validFirstName(form.firstName) &&
     validLastName(form.lastName) &&

@@ -9,7 +9,7 @@ fetch("http://localhost:3000/api/products")
     displayProducts(jsonListKanap);
   })
   .catch(function (err) {
-    console.log("erreur 404")
+    console.log("erreur 404" + err)
   });
 
  //Affichage des produits sur la page d'accueil
