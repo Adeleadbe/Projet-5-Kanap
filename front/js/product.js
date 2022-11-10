@@ -65,9 +65,6 @@ function cartProduct(jsonKanap) {
       id: jsonKanap._id,
       colors: colorsId.value,
       quantity: parseInt(productQuantity.value),
-      img: jsonKanap.imageUrl,
-      alt: jsonKanap.altTxt,
-      name: jsonKanap.name
     };
 
     if (productKanap.colors == false) {

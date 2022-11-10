@@ -1,39 +1,46 @@
 //Recupere les produits du LocalStorage
 let productLocalStorage = JSON.parse(localStorage.getItem("product"));
 
-fetch("http://localhost:3000/api/products")
-  .then(function (response) {
-    if (response.ok) {
-      return response.json();
-    }
-  })
-  .then(function (jsonListKanap) {
-    dataApi(jsonListKanap);
-  })
-  .catch(function (err) {
-    console.log("erreur 404" + err);
-  });
+//Création des variables pour récuperer les elements dans l'api
+let productsName = "";
+let productsImage = "";
+let productstextAlt = "";
+let productsPrice = 0;
 
-//Fonction pour afficher tous les elements dans le panier
-function dataApi(jsonListKanap) {
-  for (let products of productLocalStorage) {
-    for (let i = 0; i < jsonListKanap.length; i++) {
-      //Affiche le prix en fonction de l'id et le multiplie par la quantité
-      if (products.id === jsonListKanap[i]._id) {
-        products.price = jsonListKanap[i].price * products.quantity;
+for (let products of productLocalStorage) {
+  //Recupere l'id des produits ajoutés dans le LocalStorage dans la requete fetch
+  fetch(`http://localhost:3000/api/products/${products.id}`)
+  .then(function (response) {
+      if (response.ok) {
+        return response.json();
       }
-    }
-    //Ajoute les éléments du Local Storage dans le DOM
+    })
+    .then(function (jsonListKanap) {
+      dataApi(jsonListKanap);
+    })
+    .catch(function (err) {
+      console.log("erreur 404" + err);
+    });
+    
+    //Fonction pour afficher tous les elements dans le panier
+    function dataApi(jsonListKanap) {
+      //Récupération des éléments dans mon api
+      productsName = jsonListKanap.name;
+      productsImage = jsonListKanap.imageUrl;
+      textAlt = jsonListKanap.textAlt;
+      productsPrice = jsonListKanap.price;
+
+    //Ajoute les éléments du Local Storage et Api dans le DOM
     const productCart = document.getElementById("cart__items");
     productCart.innerHTML += `<article class="cart__item" data-id="${products.id}" data-color="${products.colors}">
                       <div class="cart__item__img">
-                        <img src="${products.img}" alt="${products.alt}">
+                        <img src="${productsImage}" alt="${productstextAlt}">
                       </div>
                       <div class="cart__item__content">
                         <div class="cart__item__content__description">
-                          <h2>${products.name}</h2>
+                          <h2>${productsName}</h2>
                           <p>${products.colors}</p>
-                          <p>${products.price} €</p>
+                          <p>${productsPrice} €</p>
                         </div>
                         <div class="cart__item__content__settings">
                           <div class="cart__item__content__settings__quantity">
@@ -61,11 +68,10 @@ function dataApi(jsonListKanap) {
 
     //Boucle pour les produits dans le localStorage
     for (let products of productLocalStorage) {
-
       //Modifie les valeurs du prix et de la quantité
       const valueQuantity = parseInt(products.quantity);
       //Multiplie le prix par la quantité du produit
-      const valuePrice = parseInt(products.price) * products.quantity;
+      const valuePrice = parseInt(productsPrice) * products.quantity;
 
       //Push dans le tableau le prix et la quantité
       quantityArr.push(valueQuantity);
@@ -119,7 +125,7 @@ function changeQuantity() {
   const itemQuantity = document.querySelectorAll(".itemQuantity");
 
   for (let i = 0; i < itemQuantity.length; i++) {
-    itemQuantity[i].addEventListener("change", () => {
+    itemQuantity[i].addEventListener("change", (e) => {
       const kanapId = itemQuantity[i].closest(".cart__item").dataset.id; //
       const kanapColor = itemQuantity[i].closest(".cart__item").dataset.color;
 
@@ -128,10 +134,17 @@ function changeQuantity() {
         (product) => product.id == kanapId && product.colors == kanapColor
       );
       //Modifie la quantité dans productLocalStorage pour ajouter le changement de itemQuantity
-      foundProduct.quantity = itemQuantity[i].value;
-      productLocalStorage.quantity = foundProduct.quantity;
-      localStorage.setItem("product", JSON.stringify(productLocalStorage));
-      location.reload();
+      if (itemQuantity[i].value > 0) {
+        foundProduct.quantity = parseInt(itemQuantity[i].value);
+        productLocalStorage.quantity = foundProduct.quantity;
+        localStorage.setItem("product", JSON.stringify(productLocalStorage));
+        displayPriceQtty();
+      } else {
+        foundProduct.quantity = itemQuantity[i].value;
+        productLocalStorage.quantity = foundProduct.quantity;
+        localStorage.setItem("product", JSON.stringify(productLocalStorage));
+        alert("Veuillez ajouter une quantité supérieur à 0 ");
+      }
     });
   }
 }
@@ -239,6 +252,7 @@ function validEmail(inputEmail) {
 }
 
 const buttonOrder = document.querySelector("#order");
+
 //Ecoute du click sur le bouton order pour envoyer ou non le formulaire
 buttonOrder.addEventListener("click", (e) => {
   e.preventDefault();
@@ -249,7 +263,7 @@ buttonOrder.addEventListener("click", (e) => {
     validLastName(form.lastName) &&
     validCity(form.city) &&
     validAddress(form.address) &&
-    productLocalStorage.length === 0 
+    productLocalStorage.length === 0
   ) {
     alert("Votre panier est vide");
   } else if (
